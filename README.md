@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MarketPulse - Market Data Analytics API & Dashboard
 
 MarketPulse is a practical, production-grade REST API built with **Java 21** and **Spring Boot 3.x** that retrieves financial instrument metadata, persists daily historical market prices in **PostgreSQL**, and computes quantitative price analytics (Daily Absolute & Percentage Change, Simple Moving Average).
@@ -268,3 +269,6 @@ MarketPulse includes an analytics web interface at `http://localhost:8080/`:
 
 ## 📄 License
 This project is open-source and available under the Apache 2.0 License.
+=======
+# MarketPulse-Market-Data-Analytics-API
+>>>>>>> 25342492952853d89e744bacbbd2b652fdebd06a

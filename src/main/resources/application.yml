@@ -1,0 +1,53 @@
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+
+spring:
+  application:
+    name: marketpulse
+  datasource:
+    url: jdbc:h2:mem:marketpulsedb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+  h2:
+    console:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+marketpulse:
+  provider:
+    type: ${MARKET_DATA_PROVIDER_TYPE:mock} # 'alphavantage' or 'mock'
+    alpha-vantage:
+      base-url: ${ALPHA_VANTAGE_BASE_URL:https://www.alphavantage.co}
+      api-key: ${MARKET_DATA_API_KEY:demo}
+      timeout-seconds: ${PROVIDER_TIMEOUT_SECONDS:10}

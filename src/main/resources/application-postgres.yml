@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:marketpulse}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:marketpulse_user}
+    password: ${DB_PASSWORD:marketpulse_secret}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect

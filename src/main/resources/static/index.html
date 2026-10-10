@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketPulse — Market Data Analytics</title>
+    <!-- Google Fonts: Plus Jakarta Sans for UI, JetBrains Mono for figures, Pinyon Script for British handwriting -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light-theme">
+    <!-- Top Bar -->
+    <header class="top-nav">
+        <div class="nav-wrapper">
+            <div class="nav-left">
+                <div class="logo-mark">
+                    <span class="logo-symbol">MP</span>
+                </div>
+                <div class="brand-group">
+                    <div class="brand-line">
+                        <span class="brand-name">MarketPulse</span>
+                        <span class="creator-stamp">done by <span class="british-handwriting">Anish Sahoo</span></span>
+                    </div>
+                    <span class="brand-tag">Market Data Analytics &bull; REST API</span>
+                </div>
+            </div>
+
+            <div class="nav-right">
+                <div class="system-status" id="systemHealthBadge">
+                    <span class="status-dot"></span>
+                    <span id="systemHealthText" class="status-label">API Online</span>
+                </div>
+                <div class="nav-links">
+                    <a href="/swagger-ui.html" target="_blank" class="text-link">
+                        <span>API Specs</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </a>
+                    <a href="/actuator/health" target="_blank" class="text-link">
+                        <span>Health</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ticker Tape Ribbon -->
+    <div class="ticker-ribbon">
+        <div class="ribbon-container">
+            <span class="ribbon-label">Watchlist</span>
+            <div class="ribbon-track" id="ribbonTrack">
+                <button class="ticker-chip active" data-symbol="AAPL">
+                    <span class="chip-sym">AAPL</span>
+                    <span class="chip-name">Apple</span>
+                </button>
+                <button class="ticker-chip" data-symbol="MSFT">
+                    <span class="chip-sym">MSFT</span>
+                    <span class="chip-name">Microsoft</span>
+                </button>
+                <button class="ticker-chip" data-symbol="GOOGL">
+                    <span class="chip-sym">GOOGL</span>
+                    <span class="chip-name">Alphabet</span>
+                </button>
+                <button class="ticker-chip" data-symbol="NVDA">
+                    <span class="chip-sym">NVDA</span>
+                    <span class="chip-name">NVIDIA</span>
+                </button>
+                <button class="ticker-chip" data-symbol="AMZN">
+                    <span class="chip-sym">AMZN</span>
+                    <span class="chip-name">Amazon</span>
+                </button>
+                <button class="ticker-chip" data-symbol="TSLA">
+                    <span class="chip-sym">TSLA</span>
+                    <span class="chip-name">Tesla</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="page-container">
+        <!-- Search & Control Header -->
+        <section class="command-bar">
+            <div class="search-box">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="symbolInput" value="AAPL" placeholder="Search ticker (e.g. AAPL, MSFT, TSLA)" maxlength="10" autocomplete="off" spellcheck="false">
+                <button id="loadBtn" class="btn-action primary">
+                    <span>Analyze</span>
+                </button>
+            </div>
+
+            <div class="sync-action">
+                <button id="syncBtn" class="btn-action outline">
+                    <svg class="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    <span class="btn-label">Sync Provider</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Notification Toast -->
+        <div id="toastMessage" class="toast-bar hidden"></div>
+
+        <!-- Main Studio Grid: Hero Chart on Left, Analytics Desk on Right -->
+        <div class="studio-layout">
+            <!-- Left: Hero Overview & Interactive Chart -->
+            <div class="studio-main">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="asset-meta">
+                            <div class="asset-badge-row">
+                                <span class="badge-pill" id="instrumentExchange">NASDAQ</span>
+                                <span class="badge-pill light" id="instrumentCurrency">USD</span>
+                                <span class="last-sync-date">Updated: <strong id="instrumentUpdated">-</strong></span>
+                            </div>
+                            <h1 class="asset-headline" id="instrumentName">Apple Inc.</h1>
+                            <span class="asset-ticker-tag" id="instrumentSymbol">AAPL</span>
+                        </div>
+
+                        <!-- Price display -->
+                        <div class="price-block">
+                            <div class="price-main-row">
+                                <span class="big-price" id="currentClose">$0.00</span>
+                                <div class="delta-tag" id="priceDeltaBadge">
+                                    <svg class="delta-arrow" id="deltaArrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <line x1="12" y1="19" x2="12" y2="5"></line>
+                                        <polyline points="5 12 12 5 19 12"></polyline>
+                                    </svg>
+                                    <span id="priceDeltaAbs">$0.00</span>
+                                    <span id="priceDeltaPct">(0.00%)</span>
+                                </div>
+                            </div>
+                            <div class="price-sub-row">
+                                <span>Previous Close: <strong id="prevClose">$0.00</strong></span>
+                                <span class="dot-divider">&bull;</span>
+                                <span>Session Date: <strong id="tradingDate">-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="chart-box">
+                        <div class="chart-controls">
+                            <span class="chart-title">Price Performance</span>
+                            <div class="time-range-group">
+                                <button class="range-pill" data-range="30">1M</button>
+                                <button class="range-pill active" data-range="90">3M</button>
+                                <button class="range-pill" data-range="180">6M</button>
+                                <button class="range-pill" data-range="all">All</button>
+                            </div>
+                        </div>
+                        <div class="canvas-wrap">
+                            <canvas id="priceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Quantitative Analytics & SMA Desk -->
+            <aside class="studio-sidebar">
+                <!-- SMA Card -->
+                <div class="desk-card">
+                    <div class="desk-card-title">
+                        <span>Moving Average (SMA)</span>
+                        <div class="period-pills">
+                            <button class="p-pill" data-period="7">7D</button>
+                            <button class="p-pill active" data-period="20">20D</button>
+                            <button class="p-pill" data-period="50">50D</button>
+                        </div>
+                    </div>
+                    <div class="desk-card-body">
+                        <div class="sma-hero">
+                            <span class="sma-value" id="smaValue">$0.00</span>
+                            <span class="sma-sub" id="smaMeta">Period: 20 sessions</span>
+                        </div>
+                        <div class="custom-sma-row">
+                            <span class="custom-label">Custom Period</span>
+                            <div class="custom-input-group">
+                                <input type="number" id="customPeriod" min="2" max="200" value="20">
+                                <button id="calcSmaBtn" class="btn-tiny">Recalculate</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Stats Card -->
+                <div class="desk-card">
+                    <div class="desk-card-title">
+                        <span>Trading Session Summary</span>
+                    </div>
+                    <div class="desk-card-body">
+                        <div class="stats-list">
+                            <div class="stat-row">
+                                <span class="stat-name">Database Records</span>
+                                <span class="stat-val" id="recordCount">0 sessions</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Previous Trading Session</span>
+                                <span class="stat-val" id="prevTradingDate">-</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Data Engine</span>
+                                <span class="stat-val">PostgreSQL + RestClient</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Rounding Precision</span>
+                                <span class="stat-val">BigDecimal (4 Decimals)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Historical Ledger Table -->
+        <section class="ledger-section">
+            <div class="ledger-header">
+                <div>
+                    <h2 class="section-heading">Historical Price Ledger</h2>
+                    <span class="section-subheading">Chronological trading sessions verified in database</span>
+                </div>
+            </div>
+            <div class="table-card">
+                <table class="editorial-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Open</th>
+                            <th>High</th>
+                            <th>Low</th>
+                            <th>Close</th>
+                            <th>Session Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pricesTableBody">
+                        <tr>
+                            <td colspan="6" class="table-empty">Loading records...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- REST API Inspector -->
+        <section class="api-inspector-section">
+            <details class="api-details">
+                <summary class="api-summary">
+                    <span class="summary-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                        <span>REST API Developer Inspector</span>
+                    </span>
+                    <span class="summary-badge">Live Payloads</span>
+                </summary>
+                <div class="inspector-grid">
+                    <div class="code-panel">
+                        <div class="panel-tag">
+                            <span class="method">GET</span>
+                            <span id="inspectUrlInstrument">/api/v1/instruments/AAPL</span>
+                        </div>
+                        <pre><code id="inspectJsonInstrument">// Awaiting response...</code></pre>
+                    </div>
+                    <div class="code-panel">
+                        <div class="panel-tag">
+                            <span class="method">GET</span>
+                            <span id="inspectUrlAnalytics">/api/v1/instruments/AAPL/analytics/daily-change</span>
+                        </div>
+                        <pre><code id="inspectJsonAnalytics">// Awaiting response...</code></pre>
+                    </div>
+                </div>
+            </details>
+        </section>
+    </main>
+
+    <!-- Editorial Footer -->
+    <footer class="site-footer">
+        <div class="footer-wrap">
+            <div class="footer-left">
+                <strong>MarketPulse</strong>
+                <span>&bull;</span>
+                <span>Java 21</span>
+                <span>&bull;</span>
+                <span>Spring Boot 3</span>
+                <span>&bull;</span>
+                <span>PostgreSQL</span>
+            </div>
+            <div class="footer-right">
+                <span class="footer-signature">Designed &amp; Built by <span class="signature-font">Anish Sahoo</span></span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
